@@ -1,0 +1,31 @@
+
+.container-div{
+  display: flex;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+
+
+.toolbar-div{
+  min-width: 1300px;
+  display: flex;
+  justify-content: center;
+  background-color: #1976d2;
+  align-items: center;
+  justify-content: space-evenly ;
+  height: 60px;
+}
+
+
+span{
+  font-size: 30px;
+  Color: aliceblue;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-style: normal;
+
+}
+
+

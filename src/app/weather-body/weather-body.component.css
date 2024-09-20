@@ -1,0 +1,69 @@
+
+#div-pic{
+  display: flex;
+  justify-content: space-between;
+}
+
+
+#icon-wea{
+  /* padding-left: 50px; */
+  width: 150px;
+}
+/*
+#descrip{
+  align-self: flex-start;
+} */
+
+#card-body-div{
+  display: flex;
+  flex-direction: row;
+  /* justify-content: center; */
+}
+
+#details-dev{
+  width: 250px;
+}
+
+#div-pic{
+  align-self: flex-end;
+  /* width: 40px; */
+}
+
+#snackbar {
+  visibility: hidden;
+  background-color: #333;
+  color: #fff;
+  text-align: center;
+  border-radius: 2px;
+  padding: 16px;
+  position: fixed;
+  left: 38%;
+  top: 50px;
+  font-size: 17px;
+}
+
+#snackbar.show {
+  visibility: visible;
+  -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
+  animation: fadein 0.5s, fadeout 0.5s 2.5s;
+}
+
+@-webkit-keyframes fadein {
+  from {top: 0; opacity: 0;}
+  to {top: 50px; opacity: 1;}
+}
+
+@keyframes fadein {
+  from {top: 0; opacity: 0;}
+  to {top: 50px; opacity: 1;}
+}
+
+@-webkit-keyframes fadeout {
+  from {top: 50px; opacity: 1;}
+  to {top: 0; opacity: 0;}
+}
+
+@keyframes fadeout {
+  from {top: 50px; opacity: 1;}
+  to {top: 0; opacity: 0;}
+}
