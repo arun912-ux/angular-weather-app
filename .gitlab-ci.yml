@@ -77,14 +77,22 @@ docker_image_tag:
       else
         export IMAGE_TAG=$CI_COMMIT_TAG
       fi
+
     - echo "IMAGE_TAG=$IMAGE_TAG"
+
     - echo "IMAGE_TAG=$IMAGE_TAG" >> variables.env
+    - echo "APP_NAME=$APP_NAME" >> variables.env
+
     - echo "APP_NAME:IMAGE_TAG=$APP_NAME:$IMAGE_TAG"
+
+  artifacts:
+    reports:
+      dotenv: variables.env
 
 
 
 docker_build:
-  needs: [build, docker_image_tag]
+  needs: [build, docker_image_tag, set_env_variables]
   stage: docker_build_push
   image: docker:latest
   services:
