@@ -7,6 +7,7 @@ stages:
   - docker_build_push
 
 variables:
+  APP_NAME: ""
   IMAGE_TAG: ""
   DOCKER_REGISTRY: "docker.io"
 
@@ -14,8 +15,8 @@ variables:
 set_env_variables:
   stage: pre_setup
   script:
-    - export APP_NAME=$(node -p "require('./package.json').name")
-    - export APP_VERSION=$(node -p "require('./package.json').version")
+    - APP_NAME=$(node -p "require('./package.json').name")
+    - APP_VERSION=$(node -p "require('./package.json').version")
 
     - echo "APP_NAME=$APP_NAME"
     - echo "APP_VERSION=$APP_VERSION"
@@ -25,12 +26,16 @@ set_env_variables:
 
   rules:
     - when: always
-
+  artifacts:
+    reports:
+      dotenv: variables.env
 
 build:
   needs: [set_env_variables]
   stage: build
   script:
+    - echo "APP_NAME:IMAGE_TAG=$APP_NAME:$IMAGE_TAG"
+
     - npm install --legacy-peer-deps
     - npm run build
   artifacts:
@@ -42,6 +47,8 @@ test:
   needs: [set_env_variables]
   stage: test
   script:
+    - echo "APP_NAME:IMAGE_TAG=$APP_NAME:$IMAGE_TAG"
+
     - npm install --legacy-peer-deps
     - echo "npm run test"
     # - npm run test
@@ -72,6 +79,8 @@ docker_image_tag:
       fi
     - echo "IMAGE_TAG=$IMAGE_TAG"
     - echo "IMAGE_TAG=$IMAGE_TAG" >> variables.env
+    - echo "APP_NAME:IMAGE_TAG=$APP_NAME:$IMAGE_TAG"
+
 
 
 docker_build:
