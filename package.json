@@ -6,7 +6,8 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "clean": "rm -rf node_modules dist && npm cache clean --force"
   },
   "private": true,
   "dependencies": {

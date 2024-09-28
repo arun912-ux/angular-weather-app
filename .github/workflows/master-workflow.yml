@@ -46,7 +46,7 @@ jobs:
           VERSION: ${{ env.VERSION }}
         run: |
           echo "REPO_NAME:VERSION=${REPO_NAME}:${VERSION}"
-        
+
       - name: Install dependencies
         run: npm install --legacy-peer-deps
 
@@ -90,20 +90,16 @@ jobs:
 
 
       - name: Debug Environment Variables for docker push
-        env:
-          REPO_NAME: ${{ env.REPO_NAME }}
-          IMAGE_TAG: ${{ env.IMAGE_TAG }}
-          VERSION: ${{ env.VERSION }}
         run: |
-          echo "REPO_NAME=${{ env.REPO_NAME }}"
-          echo "IMAGE_TAG=${{ env.IMAGE_TAG }}"
-          echo "VERSION=${{ env.VERSION }}"
+          echo "IMAGE_TAG=${IMAGE_TAG}"
+          echo "VERSION=${VERSION}"
+
 
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.REPO_NAME }}:${{ env.IMAGE_TAG }}
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${REPO_NAME}:${IMAGE_TAG}
 
 
