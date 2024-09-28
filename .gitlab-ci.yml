@@ -1,3 +1,4 @@
+image: node:20
 
 stages:
   - pre_setup
@@ -18,12 +19,13 @@ before_script: |
 
 set_env_variables:
   stage: pre_setup
-  image: node:20
   script:
     - export APP_NAME=$(node -p "require('./package.json').name")
     - export APP_VERSION=$(node -p "require('./package.json').version")
-    - echo "APP_NAME=$APP_NAME" >> $CI_ENVIRONMENT_FILE
-    - echo "APP_VERSION=$APP_VERSION" >> $CI_ENVIRONMENT_FILE
+    - echo "APP_NAME=$APP_NAME"
+    - echo "APP_VERSION=$APP_VERSION"
+    # - echo "APP_NAME=$APP_NAME" >> $CI_ENVIRONMENT_FILE
+    # - echo "APP_VERSION=$APP_VERSION" >> $CI_ENVIRONMENT_FILE
   rules:
     - when: always
 
@@ -88,12 +90,12 @@ docker_push:
   image: docker:latest
   services:
     - docker:dind
-  variables:
-    DOCKER_HOST: tcp://docker:2375/
-    DOCKER_TLS_CERTDIR: ""  # Disable TLS for Docker-in-Docker
+  # variables:
+  #   DOCKER_HOST: tcp://docker:2375/
+  #   DOCKER_TLS_CERTDIR: ""  # Disable TLS for Docker-in-Docker
   script:
     - source $CI_ENVIRONMENT_FILE  # Load environment variables
     - echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin $DOCKER_REGISTRY
     - docker tag $APP_NAME:$APP_VERSION $DOCKER_REGISTRY/$APP_NAME:$APP_VERSION
-    - docker push $APP_NAME:$APP_VERSION
+    - docker push $DOCKER_REGISTRY/$APP_NAME:$APP_VERSION
 
