@@ -25,15 +25,6 @@ set_env_variables:
 
   rules:
     - when: always
-  artifacts:
-    paths:
-      - variables.env
-
-
-before_script:
-   - echo "CI_ENVIRONMENT_FILE=$CI_ENVIRONMENT_FILE"
-   - cat variables.env
-   - source variables.env
 
 
 build:
