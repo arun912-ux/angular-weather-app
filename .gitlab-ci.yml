@@ -39,8 +39,6 @@ before_script:
 build:
   needs: [set_env_variables]
   stage: build
-  dependencies:
-    - set_env_variables
   script:
     - npm install --legacy-peer-deps
     - npm run build
@@ -51,8 +49,6 @@ build:
 
 test:
   needs: [set_env_variables]
-  dependencies:
-    - set_env_variables
   stage: test
   script:
     - npm install --legacy-peer-deps
@@ -69,8 +65,6 @@ test:
 
 docker_image_tag:
   needs: [build, set_env_variables]
-  dependencies:
-    - set_env_variables
   stage: docker_build_push
   image: docker:latest
   services:
@@ -91,8 +85,6 @@ docker_image_tag:
 
 docker_build:
   needs: [build, docker_image_tag]
-  dependencies:
-    - set_env_variables
   stage: docker_build_push
   image: docker:latest
   services:
@@ -104,8 +96,6 @@ docker_build:
 
 docker_push:
   needs: [docker_build]
-  dependencies:
-    - set_env_variables
   stage: docker_build_push
   image: docker:latest
   services:
