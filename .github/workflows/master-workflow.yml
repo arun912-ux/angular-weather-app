@@ -10,9 +10,9 @@ on:
       - master
 
 env:
-  REPO_NAME: ""
-  VERSION: ""
-  IMAGE_TAG: ""
+  # REPO_NAME: ""
+  # VERSION: ""
+  # IMAGE_TAG: ""
 
 jobs:
 
@@ -40,12 +40,10 @@ jobs:
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
           echo "REPO_NAME=${REPO_NAME}" >> $GITHUB_ENV
 
-      - name: set env
-        env:
-          REPO_NAME: ${{ env.REPO_NAME }}
-          VERSION: ${{ env.VERSION }}
+      - name: Get env
         run: |
           echo "REPO_NAME:VERSION=${REPO_NAME}:${VERSION}"
+          echo "REPO_NAME:VERSION=${{ env.REPO_NAME }}:${{ env.VERSION }}"
 
       - name: Install dependencies
         run: npm install --legacy-peer-deps
@@ -91,8 +89,9 @@ jobs:
 
       - name: Debug Environment Variables for docker push
         run: |
-          echo "IMAGE_TAG=${IMAGE_TAG}"
-          echo "VERSION=${VERSION}"
+          echo "REPO_NAME=${{ env.REPO_NAME }}"
+          echo "IMAGE_TAG=${{ env.IMAGE_TAG }}"
+          echo "VERSION=${{ env.VERSION }}"
 
 
       - name: Build and push
@@ -100,6 +99,6 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${REPO_NAME}:${IMAGE_TAG}
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.REPO_NAME }}:${{ env.IMAGE_TAG }}
 
 
