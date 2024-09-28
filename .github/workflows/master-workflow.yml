@@ -9,10 +9,10 @@ on:
     branches:
       - master
 
-env:
-  # REPO_NAME: ""
-  # VERSION: ""
-  # IMAGE_TAG: ""
+# env:
+#   REPO_NAME: ""
+#   VERSION: ""
+#   IMAGE_TAG: ""
 
 jobs:
 
