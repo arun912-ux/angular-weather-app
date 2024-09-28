@@ -55,7 +55,7 @@ test:
 
 docker_image_tag:
   needs: [build, set_env_variables]
-  stage: docker_image
+  stage: docker_build_push
   image: docker:latest
   services:
     - docker:dind
