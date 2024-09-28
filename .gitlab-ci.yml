@@ -45,13 +45,14 @@ test:
   needs: [set_env_variables]
   stage: test
   script:
+    - npm install --legacy-peer-deps
     - npm run test
   artifacts:
     reports:
       junit: unit-test-results.xml
   rules:
     - if: '$CI_COMMIT_REF_NAME == "master" || $CI_COMMIT_TAG'  # Check if it's master or a tag
-      allow_failure: true  # Allow this job to fail without failing the pipeline
+      allow_failure: false  # Allow this job to fail without failing the pipeline
 
 
 
@@ -62,7 +63,7 @@ docker_image_tag:
   services:
     - docker:dind
   script:
-    - source $CI_ENVIRONMENT_FILE  # Load environment variables
+    - echo "CI_ENVIRONMENT_FILE=$CI_ENVIRONMENT_FILE"  # Load environment variables
    # get the tag name or branch commit sha
     - if [ -z "$CI_COMMIT_TAG" ]; then
         export IMAGE_TAG=$CI_COMMIT_SHA
@@ -79,7 +80,7 @@ docker_build:
   services:
     - docker:dind
   script:
-    - source $CI_ENVIRONMENT_FILE  # Load environment variables
+    - echo "CI_ENVIRONMENT_FILE=$CI_ENVIRONMENT_FILE"  # Load environment variables
     - echo "APP_NAME:APP_VERSION=$APP_NAME:$APP_VERSION"
     - docker build . -t $APP_NAME:$APP_VERSION
 
@@ -94,7 +95,7 @@ docker_push:
   #   DOCKER_HOST: tcp://docker:2375/
   #   DOCKER_TLS_CERTDIR: ""  # Disable TLS for Docker-in-Docker
   script:
-    - source $CI_ENVIRONMENT_FILE  # Load environment variables
+    - echo "CI_ENVIRONMENT_FILE=$CI_ENVIRONMENT_FILE"  # Load environment variables
     - echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin $DOCKER_REGISTRY
     - docker tag $APP_NAME:$APP_VERSION $DOCKER_REGISTRY/$APP_NAME:$APP_VERSION
     - docker push $DOCKER_REGISTRY/$APP_NAME:$APP_VERSION
