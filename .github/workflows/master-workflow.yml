@@ -16,10 +16,6 @@ jobs:
   setup-build:
     runs-on: ubuntu-latest
 
-    outputs:
-      REPO_NAME: ${{ steps.env_vars.outputs.REPO_NAME }}
-      VERSION: ${{ steps.env_vars.outputs.VERSION }}
-
     steps:
 
       - name: Set up Node.js
@@ -57,6 +53,11 @@ jobs:
 
       - name: Build
         run: npm run build
+
+
+    outputs:
+      REPO_NAME: ${{ steps.env_vars.outputs.REPO_NAME }}
+      VERSION: ${{ steps.env_vars.outputs.VERSION }}
 
 
 
@@ -100,6 +101,8 @@ jobs:
       - name: Debug Environment Variables for docker push
         env:
           IMAGE_TAG: ${{ env.IMAGE_TAG }}
+          REPO_NAME: ${{ needs.setup-build.outputs.REPO_NAME }}
+          VERSION: ${{ needs.setup-build.outputs.VERSION }}
         run: |
           echo "REPO_NAME=${{ env.REPO_NAME }}"
           echo "IMAGE_TAG=${{ env.IMAGE_TAG }}"
