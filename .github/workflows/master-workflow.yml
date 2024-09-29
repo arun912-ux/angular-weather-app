@@ -69,6 +69,9 @@ jobs:
     env:
       REPO_NAME: ${{ needs.setup-build.outputs.REPO_NAME }}
       VERSION: ${{ needs.setup-build.outputs.VERSION }}
+    outputs:
+      IMAGE_TAG: ${{ steps.vars.outputs.IMAGE_TAG }}
+      REPO_NAME: ${{ steps.vars.outputs.REPO_NAME }}
 
     steps:
       - name: Checkout
@@ -101,6 +104,17 @@ jobs:
           REPO_NAME=${GITHUB_REPOSITORY#*/}
           echo "REPO_NAME=${REPO_NAME}" >> $GITHUB_ENV
 
+          #######
+          # to pass to helm
+          echo "REPO_NAME=${REPO_NAME}" >> variables.env
+          echo "IMAGE_TAG=${IMAGE_TAG}" >> variables.env
+          echo "VERSION=${VERSION}" >> variables.env
+          #######
+
+          echo "REPO_NAME=${REPO_NAME}" >> $GITHUB_OUTPUT
+          echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+          echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+
 
 
       - name: Debug Environment Variables for docker push
@@ -109,14 +123,79 @@ jobs:
           echo "IMAGE_TAG=${{ env.IMAGE_TAG }}"
           echo "VERSION=${{ env.VERSION }}"
 
+######
+      - name: Upload Docker image name to file
+        uses: actions/upload-artifact@v4
+        with:
+          name: env-variables
+          path: variables.env
+######
 
       - name: Build and push
         uses: docker/build-push-action@v6
-        env:
-          IMAGE_TAG: ${{ env.IMAGE_TAG }}
         with:
           context: .
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.REPO_NAME }}:${{ env.IMAGE_TAG }}
+
+
+
+# have to put the dokcer image in the environment variables to use it in helm_deploy job
+
+  helm_deploy:
+
+    runs-on: ubuntu-latest
+    needs: [docker_build_push]
+
+    env:
+      REPO_NAME: ${{ needs.docker_build_push.outputs.REPO_NAME }}
+      IMAGE_TAG: ${{ needs.docker_build_push.outputs.IMAGE_TAG }}
+
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.13.3
+
+      - name: Get env
+        run: |
+          echo "REPO_NAME=${{ env.REPO_NAME }}"
+          echo "IMAGE_TAG=${{ env.IMAGE_TAG }}"
+
+
+########
+      - name: Download Docker image name from file
+        uses: actions/download-artifact@v2
+        with:
+          name: env-variables
+
+      - name: cat and source file
+        run: |
+          cat variables.env
+          cat variables.env >> $GITHUB_ENV
+          source variables.env
+
+
+      - name: Get image tag
+        run: |
+          echo "IMAGE_TAG=${IMAGE_TAG}"
+          echo "REPO_NAME=${REPO_NAME}"
+########
+
+
+      - name: helm lint and template
+        run: |
+          helm lint helm
+          helm template helm
+
+      - name: helm_deploy
+        run: |
+          echo "helm upgrade --install $APP_NAME ./helm --set image.tag=$IMAGE_TAG"
 
 

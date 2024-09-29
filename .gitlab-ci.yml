@@ -5,6 +5,7 @@ stages:
   - build
   - test
   - docker_build_push
+  - helm_deploy
 
 variables:
   APP_NAME: ""
@@ -24,8 +25,6 @@ set_env_variables:
     - echo "APP_NAME=$APP_NAME" >> variables.env
     - echo "APP_VERSION=$APP_VERSION" >> variables.env
 
-  rules:
-    - when: always
   artifacts:
     reports:
       dotenv: variables.env
@@ -70,8 +69,8 @@ docker_image_tag:
   script:
     - echo "CI_ENVIRONMENT_FILE=$CI_ENVIRONMENT_FILE"  # Load environment variables
    # get the tag name or branch commit sha
-    - |
-      #! /bin/bash ;
+    - >
+      #! /bin/bash
       if [ -z "$CI_COMMIT_TAG" ]; then
         export IMAGE_TAG="$(echo ${CI_COMMIT_SHA} | cut -c1-7)"
       else
@@ -103,7 +102,7 @@ docker_build:
 
 
 docker_push:
-  needs: [docker_build]
+  needs: [docker_build, docker_image_tag, set_env_variables]
   stage: docker_build_push
   image: docker:latest
   services:
@@ -113,7 +112,36 @@ docker_push:
   #   DOCKER_TLS_CERTDIR: ""  # Disable TLS for Docker-in-Docker
   script:
     - echo "$DOCKER_REGISTRY/$APP_NAME:$IMAGE_TAG"
+    # docker registry login
     - echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin $DOCKER_REGISTRY
     - docker tag $APP_NAME:$IMAGE_TAG $DOCKER_REGISTRY/$APP_NAME:$IMAGE_TAG
+    # docker image full name with tag for pull
+    - echo DOCKER_IMAGE_FULL_NAME=$DOCKER_REGISTRY/$APP_NAME:$IMAGE_TAG
+    - echo DOCKER_IMAGE_FULL_NAME=$DOCKER_REGISTRY/$APP_NAME:$IMAGE_TAG >> variables.env
+    # push
     - docker push $DOCKER_REGISTRY/$APP_NAME:$IMAGE_TAG
+
+  artifacts:
+    reports:
+      dotenv: variables.env
+
+
+
+helm_lint_template:
+  stage: helm_deploy
+  needs: [docker_push]
+  image: alpine/helm:3.16
+  script:
+    - helm lint ./helm
+    - helm template ./helm
+
+
+helm_deploy:
+  stage: helm_deploy
+  needs: [docker_push, helm_lint_template, docker_image_tag, set_env_variables]
+  image: alpine/helm:3.16
+  script:
+    - |
+      echo "helm upgrade --install $APP_NAME ./helm --set image.tag=$IMAGE_TAG"
+
 

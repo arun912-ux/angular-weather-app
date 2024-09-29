@@ -14,7 +14,7 @@ RUN npm install --legacy-peer-deps
 COPY . .
 
 # Build the application
-RUN npm run build
+RUN npm run build --prod
 
 # Stage 2: Serve the application using Nginx
 FROM nginx:alpine
