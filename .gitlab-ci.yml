@@ -8,6 +8,7 @@ stages:
   - helm_deploy
 
 variables:
+  DOCKERHUB_USERNAME: arun912
   APP_NAME: ""
   IMAGE_TAG: ""
   DOCKER_REGISTRY: "docker.io"
@@ -98,7 +99,7 @@ docker_build:
     - docker:dind
   script:
     - echo "APP_NAME:IMAGE_TAG=$APP_NAME:$IMAGE_TAG"
-    - docker build . -t $APP_NAME:$IMAGE_TAG
+    - docker build . -t $DOCKERHUB_USERNAME/$APP_NAME:$IMAGE_TAG
 
 
 docker_push:
@@ -107,19 +108,17 @@ docker_push:
   image: docker:latest
   services:
     - docker:dind
-  # variables:
-  #   DOCKER_HOST: tcp://docker:2375/
-  #   DOCKER_TLS_CERTDIR: ""  # Disable TLS for Docker-in-Docker
+
   script:
     - echo "$DOCKER_REGISTRY/$APP_NAME:$IMAGE_TAG"
     # docker registry login
     - echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin $DOCKER_REGISTRY
-    - docker tag $APP_NAME:$IMAGE_TAG $DOCKER_REGISTRY/$APP_NAME:$IMAGE_TAG
+    # - docker tag $APP_NAME:$IMAGE_TAG $DOCKER_REGISTRY/$APP_NAME:$IMAGE_TAG
     # docker image full name with tag for pull
-    - echo DOCKER_IMAGE_FULL_NAME=$DOCKER_REGISTRY/$APP_NAME:$IMAGE_TAG
-    - echo DOCKER_IMAGE_FULL_NAME=$DOCKER_REGISTRY/$APP_NAME:$IMAGE_TAG >> variables.env
+    - echo DOCKER_IMAGE_FULL_NAME=$DOCKERHUB_USERNAME/$APP_NAME:$IMAGE_TAG
+    - echo DOCKER_IMAGE_FULL_NAME=$DOCKERHUB_USERNAME/$APP_NAME:$IMAGE_TAG >> variables.env
     # push
-    - docker push $DOCKER_REGISTRY/$APP_NAME:$IMAGE_TAG
+    - docker push $DOCKERHUB_USERNAME/$APP_NAME:$IMAGE_TAG
 
   artifacts:
     reports:
@@ -129,11 +128,11 @@ docker_push:
 
 helm_lint_template:
   stage: helm_deploy
-  needs: [docker_push]
+  needs: [docker_push, docker_image_tag, set_env_variables]
   image: alpine/helm:3.16
   script:
     - helm lint ./helm
-    - helm template ./helm
+    - helm template ./helm --set image.tag=$IMAGE_TAG
 
 
 helm_deploy:
