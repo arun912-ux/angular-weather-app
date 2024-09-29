@@ -158,9 +158,9 @@ jobs:
       - name: helm lint and template
         run: |
           helm lint helm
-          helm template helm
+          helm template helm --set image.tag=$IMAGE_TAG
 
-      - name: helm_deploy
+      - name: helm_deploy_upgrade
         run: |
           echo "helm upgrade --install $APP_NAME ./helm --set image.tag=$IMAGE_TAG"
 
