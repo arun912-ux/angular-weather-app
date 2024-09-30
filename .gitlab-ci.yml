@@ -97,13 +97,20 @@ docker_image_build_push:
   image: docker:latest
   services:
     - docker:dind
+  before_script:
+    - echo "Login into $DOCKER_REGISTRY registry..."
+    - echo $DOCKERHUB_PASSWORD | docker login $DOCKER_REGISTRY -u $DOCKERHUB_USERNAME --password-stdin
+
   script:
+    - echo "Login into $DOCKER_REGISTRY registry..."
+    - echo $DOCKERHUB_PASSWORD | docker login $DOCKER_REGISTRY -u $DOCKERHUB_USERNAME --password-stdin
+
     - echo "DOCKERHUB_USERNAME/APP_NAME:IMAGE_TAG=$DOCKERHUB_USERNAME/$APP_NAME:$IMAGE_TAG"
     - docker build . -t $DOCKERHUB_USERNAME/$APP_NAME:$IMAGE_TAG
     - echo "docker build is completed..!! $DOCKERHUB_USERNAME/$APP_NAME:$IMAGE_TAG"
+
     - docker images
-    - echo "Login into $DOCKER_REGISTRY registry..."
-    - echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin $DOCKER_REGISTRY
+
     - echo "Pushing to docker registry..."
     - docker push $DOCKERHUB_USERNAME/$APP_NAME:$IMAGE_TAG
     - echo DOCKER_IMAGE_FULL_NAME=$DOCKERHUB_USERNAME/$APP_NAME:$IMAGE_TAG >> variables.env
