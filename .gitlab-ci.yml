@@ -102,8 +102,6 @@ docker_image_build_push:
     - echo $DOCKERHUB_PASSWORD | docker login $DOCKER_REGISTRY -u $DOCKERHUB_USERNAME --password-stdin
 
   script:
-    - echo "Login into $DOCKER_REGISTRY registry..."
-    - echo $DOCKERHUB_PASSWORD | docker login $DOCKER_REGISTRY -u $DOCKERHUB_USERNAME --password-stdin
 
     - echo "DOCKERHUB_USERNAME/APP_NAME:IMAGE_TAG=$DOCKERHUB_USERNAME/$APP_NAME:$IMAGE_TAG"
     - docker build . -t $DOCKERHUB_USERNAME/$APP_NAME:$IMAGE_TAG
