@@ -143,6 +143,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Tailscale
+        uses: tailscale/github-action@v2
+        with:
+          authkey: ${{ secrets.TAILSCALE_AUTH }}
+
+      - name: Test Tailscale
+        run: |
+            tailscale status
+            ping 100.74.97.11 -c3 -W10
+            ping ubuntu-kube -c3 -W10
+
 
       - name: Setup Helm
         uses: azure/setup-helm@v4
@@ -160,8 +171,15 @@ jobs:
           helm lint helm
           helm template helm --set image.tag=$IMAGE_TAG
 
+      - name: Setup KUBE_CONFIG
+        run: |
+          echo "${KUBE_CONFIG}" | base64 --decode > ~/.kube/config
+          chmod 600 ~/.kube/config
+          kubectl get all --all-namespaces
+
       - name: helm_deploy_upgrade
         run: |
           echo "helm upgrade --install $APP_NAME ./helm --set image.tag=$IMAGE_TAG"
+          helm upgrade --install $APP_NAME-$IMAGE_TAG ./helm --set image.tag=$IMAGE_TAG
 
 

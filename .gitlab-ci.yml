@@ -5,7 +5,7 @@ stages:
   - build
   - test
   - docker_build_push
-  - helm_deploy
+  - helm_kube_deploy
 
 variables:
   DOCKERHUB_USERNAME: arun912
@@ -123,9 +123,17 @@ docker_image_build_push:
 
 
 
+setup_tailscale:
+  stage: helm_kube_deploy
+  needs: [docker_image_build_push, docker_image_tag, set_env_variables]
+  image: tailscale/tailscale:stable
+  script:
+    - tailscale up --authkey $TAILSCALE_AUTH --accept-dns --accept-routes
+
+
 
 helm_lint_template:
-  stage: helm_deploy
+  stage: helm_kube_deploy
   needs: [docker_image_build_push, docker_image_tag, set_env_variables]
   image: alpine/k8s:1.31.1
   script:
@@ -134,11 +142,15 @@ helm_lint_template:
 
 
 helm_deploy:
-  stage: helm_deploy
-  needs: [docker_image_build_push, helm_lint_template, docker_image_tag, set_env_variables]
+  stage: helm_kube_deploy
+  needs: [docker_image_build_push, helm_lint_template, docker_image_tag, set_env_variables, setup_tailscale]
   image: alpine/k8s:1.31.1
-  script:
-    - |
+  before_script: |
+    #! /bin/bash
+    echo "${KUBE_CONFIG}" | base64 --decode > ~/.kube/config
+    chmod 600 ~/.kube/config
+    kubectl get all --all-namespaces
+  script: |
       echo "helm upgrade --install $APP_NAME ./helm --set image.tag=$IMAGE_TAG"
-
+      helm upgrade --install $APP_NAME-$IMAGE_TAG ./helm --set image.tag=$IMAGE_TAG
 
