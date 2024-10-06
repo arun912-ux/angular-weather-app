@@ -128,7 +128,7 @@ jobs:
 
 # have to put the dokcer image in the environment variables to use it in helm_deploy job
 
-  helm_deploy:
+  helm_kube_deploy:
 
     runs-on: ubuntu-latest
     needs: [docker_build_push]
@@ -182,7 +182,7 @@ jobs:
 
       - name: helm_deploy_upgrade
         run: |
-          echo "helm upgrade --install $APP_NAME ./helm --set image.tag=$IMAGE_TAG"
-          helm upgrade --install $APP_NAME-$IMAGE_TAG ./helm --set image.tag=$IMAGE_TAG
+          echo "helm upgrade --install $REPO_NAME ./helm --set image.tag=$IMAGE_TAG"
+          helm upgrade --install ${{ env.REPO_NAME }}-$IMAGE_TAG ./helm --set image.tag=$IMAGE_TAG
 
 
