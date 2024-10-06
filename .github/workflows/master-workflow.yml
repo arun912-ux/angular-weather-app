@@ -136,6 +136,7 @@ jobs:
     env:
       REPO_NAME: ${{ needs.docker_build_push.outputs.REPO_NAME }}
       IMAGE_TAG: ${{ needs.docker_build_push.outputs.IMAGE_TAG }}
+      KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
 
 
     steps:
@@ -152,7 +153,6 @@ jobs:
         run: |
             tailscale status
             ping 100.74.97.11 -c3 -W10
-            ping ubuntu-kube -c3 -W10
 
 
       - name: Setup Helm
@@ -171,11 +171,14 @@ jobs:
           helm lint helm
           helm template helm --set image.tag=$IMAGE_TAG
 
+
       - name: Setup KUBE_CONFIG
         run: |
-          echo "${KUBE_CONFIG}" | base64 --decode > ~/.kube/config
+          mkdir -p ~/.kube && touch ~/.kube/config
+          echo "${{ env.KUBE_CONFIG }}" | base64 --decode > ~/.kube/config
           chmod 600 ~/.kube/config
           kubectl get all --all-namespaces
+
 
       - name: helm_deploy_upgrade
         run: |

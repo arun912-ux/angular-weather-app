@@ -125,10 +125,16 @@ docker_image_build_push:
 
 setup_tailscale:
   stage: helm_kube_deploy
-  needs: [docker_image_build_push, docker_image_tag, set_env_variables]
+  needs: [docker_image_build_push]
   image: tailscale/tailscale:stable
+  before_script:
+    - tailscale status
   script:
-    - tailscale up --authkey $TAILSCALE_AUTH --accept-dns --accept-routes
+    - tailscale up --accept-dns --accept-routes --authkey=$TAILSCALE_AUTH
+    - |
+      tailscale ip
+      tailscale status
+      ping 100.74.97.11 -c3 -W10
 
 
 
@@ -147,10 +153,11 @@ helm_deploy:
   image: alpine/k8s:1.31.1
   before_script: |
     #! /bin/bash
+    mkdir -p ~/.kube && touch ~/.kube/config
     echo "${KUBE_CONFIG}" | base64 --decode > ~/.kube/config
     chmod 600 ~/.kube/config
     kubectl get all --all-namespaces
   script: |
       echo "helm upgrade --install $APP_NAME ./helm --set image.tag=$IMAGE_TAG"
-      helm upgrade --install $APP_NAME-$IMAGE_TAG ./helm --set image.tag=$IMAGE_TAG
+      helm upgrade --install "${APP_NAME}-${IMAGE_TAG}" ./helm --set image.tag=$IMAGE_TAG
 
