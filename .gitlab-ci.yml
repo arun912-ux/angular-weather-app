@@ -122,39 +122,44 @@ docker_image_build_push:
       dotenv: variables.env
 
 
+.common_script: &common_script
+  - echo "This is a common step"
+
+
 
 setup_tailscale:
   stage: helm_kube_deploy
   needs: [docker_image_build_push]
-  # image: tailscale/tailscale:stable
   image: ubuntu:24.04
 
   before_script:
     - apt-get update && apt-get install -y curl wget iputils-ping iproute2 dnsutils ca-certificates openssh-client
     - curl -fsSL https://tailscale.com/install.sh | sh
     - STATE_ARGS=" --state=mem:"
-    - tailscaled ${STATE_ARGS} ${ADDITIONAL_DAEMON_ARGS}
-    - sleep 10
+    - tailscaled ${STATE_ARGS} ${ADDITIONAL_DAEMON_ARGS} 2> ~/tailscaled.log &
+    - sleep 30
     - tailscale status --json
 
   script:
+    - *common_script
     - tailscale up --authkey=${TAILSCALE_AUTH} --hostname=${HOSTNAME} --accept-routes
     - |
       tailscale ip
       tailscale status
       ping 100.74.97.11 -c3 -W10
+
+
 
 setup_tailscale_with_image:
   stage: helm_kube_deploy
   needs: [docker_image_build_push]
-  image: tailscale/k8s-operator:stable
+  image: tailscale/tailscale:stable
 
   before_script:
-    - which tailscale
-    - which helm
-    - STATE_ARGS="--state=mem:"
-    - tailscaled ${STATE_ARGS} ${ADDITIONAL_DAEMON_ARGS}
-    - sleep 10
+    - cat /etc/os-release
+    - STATE_ARGS=" --state=mem:"
+    - tailscaled ${STATE_ARGS} ${ADDITIONAL_DAEMON_ARGS} 2> ~/tailscaled.log &
+    - sleep 30
     - tailscale status --json
 
   script:
@@ -163,13 +168,16 @@ setup_tailscale_with_image:
       tailscale ip
       tailscale status
       ping 100.74.97.11 -c3 -W10
-
 
 
 helm_lint_template:
   stage: helm_kube_deploy
   needs: [docker_image_build_push, docker_image_tag, set_env_variables]
   image: alpine/k8s:1.31.1
+
+  before_script:
+    - curl -fsSL https://tailscale.com/install.sh | sh
+
   script:
     - helm lint ./helm
     - helm template ./helm --set image.tag=$IMAGE_TAG
