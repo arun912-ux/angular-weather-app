@@ -130,7 +130,28 @@ setup_tailscale:
   image: ubuntu:24.04
 
   before_script:
+    - apt-get update && apt-get install -y curl wget iputils-ping iproute2 dnsutils ca-certificates openssh-client
     - curl -fsSL https://tailscale.com/install.sh | sh
+    - STATE_ARGS=" --state=mem:"
+    - tailscaled ${STATE_ARGS} ${ADDITIONAL_DAEMON_ARGS}
+    - sleep 10
+    - tailscale status --json
+
+  script:
+    - tailscale up --authkey=${TAILSCALE_AUTH} --hostname=${HOSTNAME} --accept-routes
+    - |
+      tailscale ip
+      tailscale status
+      ping 100.74.97.11 -c3 -W10
+
+setup_tailscale_with_image:
+  stage: helm_kube_deploy
+  needs: [docker_image_build_push]
+  image: tailscale/k8s-operator:stable
+
+  before_script:
+    - which tailscale
+    - which helm
     - STATE_ARGS="--state=mem:"
     - tailscaled ${STATE_ARGS} ${ADDITIONAL_DAEMON_ARGS}
     - sleep 10
