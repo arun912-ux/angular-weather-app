@@ -36,9 +36,9 @@ jobs:
           fi
 
           BRANCH_NAME=${GITHUB_REF##*/}
-          echo "BRANCH_NAME:${BRANCH_NAME}"
-          echo "BRANCH_NAME:${BRANCH_NAME}" >> $GITHUB_ENV
-          echo "BRANCH_NAME:${BRANCH_NAME}" >> $GITHUB_OUTPUT
+          echo "BRANCH_NAME=${BRANCH_NAME}"
+          echo "BRANCH_NAME=${BRANCH_NAME}" >> $GITHUB_ENV
+          echo "BRANCH_NAME=${BRANCH_NAME}" >> $GITHUB_OUTPUT
 
           echo "REPO_NAME:VERSION=${REPO_NAME}:${VERSION}"
 
