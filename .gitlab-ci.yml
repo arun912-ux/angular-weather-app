@@ -132,12 +132,12 @@ setup_tailscale:
     - |
       #! /bin/bash
       STATE_ARGS="--state=mem:"
-      sudo -E tailscaled ${STATE_ARGS} ${ADDITIONAL_DAEMON_ARGS}
+      tailscaled ${STATE_ARGS} ${ADDITIONAL_DAEMON_ARGS}
       sleep 10
-      sudo -E tailscale status --json
-      
+      tailscale status --json
+
   script:
-    - sudo -E tailscale up --authkey=${TAILSCALE_AUTH} --hostname=${HOSTNAME} --accept-routes
+    - tailscale up --authkey=${TAILSCALE_AUTH} --hostname=${HOSTNAME} --accept-routes
     - |
       tailscale ip
       tailscale status
