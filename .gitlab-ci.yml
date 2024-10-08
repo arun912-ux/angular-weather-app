@@ -129,7 +129,9 @@ setup_tailscale:
   image: tailscale/tailscale:stable
   before_script:
     - sleep 10
-    - systemctl --no-pager status tailscaled && systemctl start tailscaled
+    # - systemctl --no-pager status tailscaled && systemctl start tailscaled
+    - tailscaled
+    - sleep 10
   script:
     - tailscale up  --authkey=$TAILSCALE_AUTH
     - |
@@ -159,6 +161,6 @@ helm_deploy:
     chmod 600 ~/.kube/config
     kubectl get all --all-namespaces
   script: |
-      echo "helm upgrade --install $APP_NAME ./helm --set image.tag=$IMAGE_TAG"
-      helm upgrade --install "${APP_NAME}-${IMAGE_TAG}" ./helm --set image.tag=$IMAGE_TAG
+      echo "helm upgrade --install $APP_NAME-$CI_COMMIT_REF_NAME ./helm --set image.tag=$IMAGE_TAG"
+      helm upgrade --install "${APP_NAME}-${CI_COMMIT_REF_NAME}" ./helm --set image.tag=$IMAGE_TAG
 

@@ -35,6 +35,11 @@ jobs:
             VERSION=${GITHUB_REF#refs/tags/}
           fi
 
+          BRANCH_NAME=${GITHUB_REF##*/}
+          echo "BRANCH_NAME:${BRANCH_NAME}"
+          echo "BRANCH_NAME:${BRANCH_NAME}" >> $GITHUB_ENV
+          echo "BRANCH_NAME:${BRANCH_NAME}" >> $GITHUB_OUTPUT
+
           echo "REPO_NAME:VERSION=${REPO_NAME}:${VERSION}"
 
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
@@ -59,6 +64,7 @@ jobs:
     outputs:
       REPO_NAME: ${{ steps.env_vars.outputs.REPO_NAME }}
       VERSION: ${{ steps.env_vars.outputs.VERSION }}
+      BRANCH_NAME: ${{ steps.env_vars.outputs.BRANCH_NAME }}
 
 
 
@@ -70,9 +76,11 @@ jobs:
     env:
       REPO_NAME: ${{ needs.setup-build.outputs.REPO_NAME }}
       VERSION: ${{ needs.setup-build.outputs.VERSION }}
+      BRANCH_NAME: ${{ needs.setup-build.outputs.BRANCH_NAME }}
     outputs:
       IMAGE_TAG: ${{ steps.vars.outputs.IMAGE_TAG }}
       REPO_NAME: ${{ steps.vars.outputs.REPO_NAME }}
+      BRANCH_NAME: ${{ env.BRANCH_NAME }}
 
     steps:
       - name: Checkout
@@ -109,6 +117,9 @@ jobs:
           echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_OUTPUT
           echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
 
+          echo "REPO_NAME=${REPO_NAME}"
+          echo "REPO_NAME=${REPO_NAME}" >> $GITHUB_ENV
+
 
 
       - name: Debug Environment Variables for docker push
@@ -137,6 +148,7 @@ jobs:
       REPO_NAME: ${{ needs.docker_build_push.outputs.REPO_NAME }}
       IMAGE_TAG: ${{ needs.docker_build_push.outputs.IMAGE_TAG }}
       KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+      BRANCH_NAME: ${{ needs.docker_build_push.outputs.BRANCH_NAME }}
 
 
     steps:
@@ -159,6 +171,7 @@ jobs:
         run: |
           echo "REPO_NAME=${{ env.REPO_NAME }}"
           echo "IMAGE_TAG=${{ env.IMAGE_TAG }}"
+          echo "BRANCH_NAME=${{ env.BRANCH_NAME }}"
 
 
       - name: helm lint and template
@@ -177,11 +190,11 @@ jobs:
 
       - name: helm_deploy_upgrade
         run: |
-          echo "helm upgrade --install $REPO_NAME ./helm --set image.tag=${IMAGE_TAG}"
-          helm upgrade --install ${{ env.REPO_NAME }}-$IMAGE_TAG ./helm --set image.tag=$IMAGE_TAG
+          echo "helm upgrade --install $REPO_NAME-$BRNACH_NAME ./helm --set image.tag=${IMAGE_TAG}"
+          helm upgrade --install ${{ env.REPO_NAME }}-${{ env.BRANCH_NAME }} ./helm --set image.tag=$IMAGE_TAG
 
       # run this manually
       - name: helm_uninstall
         run: |
-          echo "helm uninstall $REPO_NAME-$IMAGE_TAG"
-          # helm uninstall ${{ env.REPO_NAME }}-$IMAGE_TAG
+          echo "helm uninstall $REPO_NAME-$BRNACH_NAME"
+          # helm uninstall ${{ env.REPO_NAME }}-${{ env.BRANCH_NAME }}
