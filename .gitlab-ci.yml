@@ -126,10 +126,12 @@ docker_image_build_push:
 setup_tailscale:
   stage: helm_kube_deploy
   needs: [docker_image_build_push]
+  image: tailscale/tailscale:stable
   before_script:
-    - curl -fsSL https://tailscale.com/install.sh | sh
+    - sleep 10
+    - systemctl --no-pager status tailscaled && systemctl start tailscaled
   script:
-    - tailscale up --accept-dns --accept-routes --authkey=$TAILSCALE_AUTH
+    - tailscale up  --authkey=$TAILSCALE_AUTH
     - |
       tailscale ip
       tailscale status

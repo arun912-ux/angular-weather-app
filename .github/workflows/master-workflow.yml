@@ -149,11 +149,6 @@ jobs:
         with:
           authkey: ${{ secrets.TAILSCALE_AUTH }}
 
-      - name: Test Tailscale
-        run: |
-            tailscale status
-            ping 100.74.97.11 -c3 -W10
-
 
       - name: Setup Helm
         uses: azure/setup-helm@v4
@@ -182,7 +177,11 @@ jobs:
 
       - name: helm_deploy_upgrade
         run: |
-          echo "helm upgrade --install $REPO_NAME ./helm --set image.tag=$IMAGE_TAG"
+          echo "helm upgrade --install $REPO_NAME ./helm --set image.tag=${IMAGE_TAG}"
           helm upgrade --install ${{ env.REPO_NAME }}-$IMAGE_TAG ./helm --set image.tag=$IMAGE_TAG
 
-
+      # run this manually
+      - name: helm_uninstall
+        run: |
+          echo "helm uninstall $REPO_NAME-$IMAGE_TAG"
+          # helm uninstall ${{ env.REPO_NAME }}-$IMAGE_TAG
