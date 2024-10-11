@@ -30,6 +30,8 @@ set_env_variables:
     reports:
       dotenv: variables.env
 
+
+
 build:
   needs: [set_env_variables]
   stage: build
@@ -41,6 +43,9 @@ build:
   artifacts:
     paths:
       - dist/angular-weather-app
+
+
+
 
 
 test:
@@ -56,8 +61,13 @@ test:
     reports:
       junit: unit-test-results.xml
   rules:
-    - if: '$CI_COMMIT_REF_NAME == "master" || $CI_COMMIT_TAG'  # Check if it's master or a tag
-      allow_failure: false  # Allow this job to fail without failing the pipeline
+    - if: '$CI_COMMIT_REF_NAME == "master" || $CI_COMMIT_TAG' # Check if it's master or a tag
+      allow_failure: false # Allow this job to fail without failing the pipeline
+
+
+
+
+
 
 
 
@@ -68,8 +78,8 @@ docker_image_tag:
   services:
     - docker:dind
   script:
-    - echo "CI_ENVIRONMENT_FILE=$CI_ENVIRONMENT_FILE"  # Load environment variables
-   # get the tag name or branch commit sha
+    - echo "CI_ENVIRONMENT_FILE=$CI_ENVIRONMENT_FILE" # Load environment variables
+    # get the tag name or branch commit sha
     - |
       #! /bin/bash
       if [ -z "$CI_COMMIT_TAG" ]; then
@@ -106,7 +116,6 @@ docker_image_build_push:
       docker login
 
   script:
-
     - echo "DOCKERHUB_USERNAME/APP_NAME:IMAGE_TAG=$DOCKERHUB_USERNAME/$APP_NAME:$IMAGE_TAG"
     - docker build . -t $DOCKERHUB_USERNAME/$APP_NAME:$IMAGE_TAG
     - echo "docker build is completed..!! $DOCKERHUB_USERNAME/$APP_NAME:$IMAGE_TAG"
@@ -122,52 +131,35 @@ docker_image_build_push:
       dotenv: variables.env
 
 
-.common_script: &common_script
-  - echo "This is a common step"
 
 
 
-setup_tailscale:
-  stage: helm_kube_deploy
-  needs: [docker_image_build_push]
-  image: ubuntu:24.04
-
-  before_script:
-    - apt-get update && apt-get install -y curl wget iputils-ping iproute2 dnsutils ca-certificates openssh-client
-    - curl -fsSL https://tailscale.com/install.sh | sh
-    - STATE_ARGS=" --state=mem:"
-    - tailscaled ${STATE_ARGS} ${ADDITIONAL_DAEMON_ARGS} 2> ~/tailscaled.log &
-    - sleep 30
-    - tailscale status --json
-
-  script:
-    - *common_script
-    - tailscale up --authkey=${TAILSCALE_AUTH} --hostname=${HOSTNAME} --accept-routes
-    - |
-      tailscale ip
-      tailscale status
-      ping 100.74.97.11 -c3 -W10
 
 
 
-setup_tailscale_with_image:
-  stage: helm_kube_deploy
-  needs: [docker_image_build_push]
-  image: tailscale/tailscale:stable
+.setup_tailscale: &setup_tailscale
+  - echo "Stetting up Tailscale..."
+  - apt-get update && apt-get install -y curl wget iputils-ping iproute2 dnsutils ca-certificates openssh-client
+  - curl -fsSL https://tailscale.com/install.sh | sh
+  - echo "Installed Tailscale..."
+  - STATE_ARGS=" --state=mem:"
+  - tailscaled ${STATE_ARGS} ${ADDITIONAL_DAEMON_ARGS} 2> ~/tailscaled.log &
+  - sleep 15
+  - tailscale status --json
+  - tailscale up --authkey=${TAILSCALE_AUTH} --hostname=${HOSTNAME} --accept-routes
+  - |
+    tailscale ip
+    tailscale status
+  - echo "Pinging the Kube cluster..."
+  - ping 100.74.97.11 -c3 -W10
 
-  before_script:
-    - cat /etc/os-release
-    - STATE_ARGS=" --state=mem:"
-    - tailscaled ${STATE_ARGS} ${ADDITIONAL_DAEMON_ARGS} 2> ~/tailscaled.log &
-    - sleep 30
-    - tailscale status --json
 
-  script:
-    - tailscale up --authkey=${TAILSCALE_AUTH} --hostname=${HOSTNAME} --accept-routes
-    - |
-      tailscale ip
-      tailscale status
-      ping 100.74.97.11 -c3 -W10
+.setup_helm_and_kubectl: &setup_helm_and_kubectl
+  - echo "Setting up helm and kubectl..."
+  - curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+  - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+  - chmod +x ./kubectl && mv ./kubectl /usr/local/bin/kubectl
+
 
 
 helm_lint_template:
@@ -175,25 +167,23 @@ helm_lint_template:
   needs: [docker_image_build_push, docker_image_tag, set_env_variables]
   image: alpine/k8s:1.31.1
 
-  before_script:
-    - curl -fsSL https://tailscale.com/install.sh | sh
-
   script:
     - helm lint ./helm
     - helm template ./helm --set image.tag=$IMAGE_TAG
 
-
-helm_deploy:
+helm_kube_deploy:
   stage: helm_kube_deploy
-  needs: [docker_image_build_push, helm_lint_template, docker_image_tag, set_env_variables, setup_tailscale]
-  image: alpine/k8s:1.31.1
-  before_script: |
-    #! /bin/bash
-    mkdir -p ~/.kube && touch ~/.kube/config
-    echo "${KUBE_CONFIG}" | base64 --decode > ~/.kube/config
-    chmod 600 ~/.kube/config
-    kubectl get all --all-namespaces
+  needs: [docker_image_build_push, helm_lint_template, docker_image_tag, set_env_variables]
+  image: ubuntu:24.04
+  before_script:
+    - *setup_tailscale
+    - *setup_helm_and_kubectl
+    - |
+      #! /bin/bash
+      mkdir -p ~/.kube && touch ~/.kube/config
+      echo "${KUBE_CONFIG}" | base64 --decode > ~/.kube/config
+      chmod 600 ~/.kube/config
+      kubectl get all --all-namespaces
   script: |
-      echo "helm upgrade --install $APP_NAME-$CI_COMMIT_REF_NAME ./helm --set image.tag=$IMAGE_TAG"
-      helm upgrade --install "${APP_NAME}-${CI_COMMIT_REF_NAME}" ./helm --set image.tag=$IMAGE_TAG
-
+    echo "helm upgrade --install $APP_NAME-$CI_COMMIT_REF_NAME ./helm --set image.tag=$IMAGE_TAG"
+    helm upgrade --install "${APP_NAME}-${CI_COMMIT_REF_NAME}" ./helm --set image.tag=$IMAGE_TAG
