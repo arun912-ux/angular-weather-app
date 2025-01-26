@@ -76,11 +76,10 @@ jobs:
     env:
       REPO_NAME: ${{ needs.setup-build.outputs.REPO_NAME }}
       VERSION: ${{ needs.setup-build.outputs.VERSION }}
-      BRANCH_NAME: ${{ needs.setup-build.outputs.BRANCH_NAME }}
     outputs:
       IMAGE_TAG: ${{ steps.vars.outputs.IMAGE_TAG }}
       REPO_NAME: ${{ steps.vars.outputs.REPO_NAME }}
-      BRANCH_NAME: ${{ env.BRANCH_NAME }}
+      BRANCH_NAME: ${{ steps.vars.outputs.BRANCH_NAME }}
 
     steps:
       - name: Checkout
@@ -119,6 +118,11 @@ jobs:
 
           echo "REPO_NAME=${REPO_NAME}"
           echo "REPO_NAME=${REPO_NAME}" >> $GITHUB_ENV
+
+          BRANCH_NAME=${GITHUB_REF##*/}
+          echo "BRANCH_NAME=${BRANCH_NAME}"
+          echo "BRANCH_NAME=${BRANCH_NAME}" >> $GITHUB_ENV
+          echo "BRANCH_NAME=${BRANCH_NAME}" >> $GITHUB_OUTPUT
 
 
 
@@ -192,6 +196,8 @@ jobs:
         run: |
           echo "helm upgrade --install $REPO_NAME-$BRNACH_NAME ./helm --set image.tag=${IMAGE_TAG}"
           helm upgrade --install ${{ env.REPO_NAME }}-${{ env.BRANCH_NAME }} ./helm --set image.tag=$IMAGE_TAG
+          echo "helm history $REPO_NAME-$BRNACH_NAME"
+          helm history ${{ env.REPO_NAME }}-${{ env.BRANCH_NAME }}
 
       # run this manually
       - name: helm_uninstall
