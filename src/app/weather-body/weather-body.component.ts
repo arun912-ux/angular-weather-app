@@ -4,9 +4,10 @@ import { WeatherapiService } from '../Service/weatherapi.service';
 
 
 @Component({
-  selector: 'app-weather-body',
-  templateUrl: './weather-body.component.html',
-  styleUrls: ['./weather-body.component.css']
+    selector: 'app-weather-body',
+    templateUrl: './weather-body.component.html',
+    styleUrls: ['./weather-body.component.css'],
+    standalone: false
 })
 
 

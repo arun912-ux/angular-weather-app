@@ -20,7 +20,7 @@ RUN npm run build --prod
 FROM nginx:alpine
 
 # Copy the built Angular app to Nginx's html folder
-COPY --from=builder /app/dist/angular-weather-app /usr/share/nginx/html
+COPY --from=builder /app/dist/angular-weather-app/browser /usr/share/nginx/html
 
 # Expose the port that Nginx is listening on
 EXPOSE 80
