@@ -1,4 +1,4 @@
-image: node:20
+image: node:22.16.0
 
 stages:
   - pre_setup
@@ -12,6 +12,9 @@ variables:
   APP_NAME: ""
   IMAGE_TAG: ""
   DOCKER_REGISTRY: "docker.io"
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_TLS_CERTDIR: ""  # disables TLS; required for DinD on port 2375
+  
 
 
 set_env_variables:
