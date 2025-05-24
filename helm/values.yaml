@@ -25,7 +25,7 @@ ingress:
   enabled: true
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
-  host: "weather.kube.local"
+  host: "weather.kube.lan"
   hosts:
       paths:
         - /
