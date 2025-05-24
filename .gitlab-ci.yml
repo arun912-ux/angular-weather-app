@@ -79,7 +79,8 @@ docker_image_tag:
   stage: docker_build_push
   image: docker:latest
   services:
-    - docker:dind
+    - name: docker:dind
+      alias: docker
   script:
     - echo "CI_ENVIRONMENT_FILE=$CI_ENVIRONMENT_FILE" # Load environment variables
     # get the tag name or branch commit sha
@@ -109,10 +110,12 @@ docker_image_build_push:
   stage: docker_build_push
   image: docker:latest
   services:
-    - docker:dind
+    - name: docker:dind
+      alias: docker
   before_script:
     - |
       #! /bin/bash
+      docker info || echo "docker info failed"
       echo "Login into $DOCKER_REGISTRY registry..."
       docker logout || echo "docker logout failed"
       mkdir -p ~/.docker
@@ -183,7 +186,7 @@ helm_kube_deploy:
     - |
       #! /bin/bash
       mkdir -p ~/.kube && touch ~/.kube/config
-      echo "${KUBE_CONFIG}" | base64 --decode > ~/.kube/config
+      echo "${KUBE_CONFIG}" | base64 -d > ~/.kube/config
       chmod 600 ~/.kube/config
       kubectl get all --all-namespaces
   script: |
