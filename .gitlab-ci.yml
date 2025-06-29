@@ -73,6 +73,7 @@ test:
 
 
 sonar:
+  needs: [set_env_variables]
   stage: test
   image: 
     name: sonarsource/sonar-scanner-cli:11
@@ -90,7 +91,6 @@ sonar:
   # rules:
   #   - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
   #   - if: $CI_COMMIT_BRANCH == 'master'
-  #   - if: $CI_COMMIT_BRANCH == 'main'
   #   - if: $CI_COMMIT_BRANCH == 'develop'
 
 
@@ -213,6 +213,22 @@ helm_kube_deploy:
   script: |
     echo "helm upgrade --install $APP_NAME-$CI_COMMIT_REF_NAME --namespace $APP_NAME --create-namespace ./helm --set image.tag=$IMAGE_TAG" 
     helm upgrade --install "${APP_NAME}-${CI_COMMIT_REF_NAME}" --namespace $APP_NAME --create-namespace ./helm --set image.tag=$IMAGE_TAG
+
+helm_kube_uninstall:
+  stage: helm_kube_deploy
+  needs: [docker_image_build_push]
+  image: alpine/k8s:1.32.5
+  before_script:
+    - |
+      #! /bin/bash
+      mkdir -p ~/.kube && touch ~/.kube/config
+      echo "${KUBE_CONFIG}" | base64 -d > ~/.kube/config
+      chmod 600 ~/.kube/config
+      kubectl get all --all-namespaces
+  script: |
+    echo "helm uninstall $APP_NAME-$CI_COMMIT_REF_NAME --namespace $APP_NAME" 
+    helm uninstall "${APP_NAME}-${CI_COMMIT_REF_NAME}" --namespace $APP_NAME
+  when: manual
 
 
 # helm_kube_deploy:
