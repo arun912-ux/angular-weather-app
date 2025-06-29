@@ -1,4 +1,4 @@
-image: node:22.16.0
+image: node:22.17.0
 
 stages:
   - pre_setup
@@ -216,7 +216,7 @@ helm_kube_deploy:
 
 helm_kube_uninstall:
   stage: helm_kube_deploy
-  needs: [docker_image_build_push]
+  needs: [docker_image_build_push, set_env_variables]
   image: alpine/k8s:1.32.5
   before_script:
     - |
