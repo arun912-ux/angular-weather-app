@@ -213,8 +213,8 @@ helm_kube_deploy:
   script: |
     echo "helm upgrade --install $APP_NAME-$CI_COMMIT_REF_NAME --namespace $APP_NAME --create-namespace ./helm --set image.tag=$IMAGE_TAG --wait --timeout 300s --atomic" 
     helm upgrade --install "${APP_NAME}-${CI_COMMIT_REF_NAME}" --namespace $APP_NAME --create-namespace ./helm --set image.tag=$IMAGE_TAG  --wait --timeout 300s --atomic 
-    echo "# Optional: Confirm rollout is healthy (extra guard) : kubectl rollout status $APP_NAME-$CI_COMMIT_REF_NAME -n $APP_NAME --timeout=300s"
-    kubectl rollout status $APP_NAME-$CI_COMMIT_REF_NAME -n $APP_NAME --timeout=300s 
+    echo "# Optional: Confirm rollout is healthy (extra guard) : kubectl rollout status deployment -n $APP_NAME --timeout=300s"
+    kubectl rollout status deployment -n $APP_NAME --timeout=300s 
 
 helm_kube_uninstall:
   stage: helm_kube_deploy
