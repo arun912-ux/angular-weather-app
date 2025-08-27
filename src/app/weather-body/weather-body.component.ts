@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { Weather } from '../Result/weather';
-import { WeatherapiService } from '../Service/weatherapi.service';
+import { Weather } from 'src/app/Result/weather';
+import { WeatherapiService } from 'src/app/Service/weatherapi.service';
 
 
 @Component({
@@ -19,7 +19,7 @@ export class WeatherBodyComponent implements OnInit {
   temp_type : string = "celsius";
   temp_symbol : string = "C";
 
-  constructor(private weatherService : WeatherapiService, public obj : Weather) {    }
+  constructor(private readonly weatherService : WeatherapiService, public obj : Weather) {    }
 
 
 
@@ -72,11 +72,11 @@ export class WeatherBodyComponent implements OnInit {
 
   toastMessage() {
     let x = document.getElementById("snackbar");
-    x!.className = "show";
+    x!.className = "hidden";
     setTimeout(
       function() {
         x!.className = x!.className.replace("show", "");
-      }, 3000);
+      }, 5000);
   }
 }
 

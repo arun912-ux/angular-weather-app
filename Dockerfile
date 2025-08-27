@@ -1,17 +1,14 @@
 # Stage 1: Build the Angular application
-FROM node:22.17.0 AS builder
+FROM node:22.18-alpine AS builder
 
 # Set the working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json
-COPY package*.json ./
+# Copy app files
+COPY . .
 
 # Install dependencies
-RUN npm install --legacy-peer-deps
-
-# Copy the rest of the application code
-COPY . .
+RUN npm install
 
 # Build the application
 RUN npm run build --prod
