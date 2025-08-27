@@ -4,7 +4,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { AppComponent } from './app.component';
 import { HeaderComponent } from './header/header.component';
 import { WeatherBodyComponent } from './weather-body/weather-body.component';
-import { HttpClientModule } from '@angular/common/http';
+import { HttpClientModule, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { Weather } from './Result/weather';
 import { FormsModule } from '@angular/forms';
@@ -17,12 +17,12 @@ import { FormsModule } from '@angular/forms';
   ],
   imports: [
     BrowserModule,
-    HttpClientModule,
+    // HttpClientModule,
     FontAwesomeModule,
     FormsModule
 
   ],
-  providers: [Weather],
+  providers: [Weather, provideHttpClient(withInterceptorsFromDi())],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

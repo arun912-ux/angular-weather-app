@@ -42,7 +42,8 @@
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.0.0",
     "karma-jasmine-html-reporter": "~1.7.0",
-    "typescript": "5.5.4"
+    "typescript": "^5.5.4",
+    "node": ">=22.17.0"
   },
   "config": {
     "legacy-peer-deps": true
