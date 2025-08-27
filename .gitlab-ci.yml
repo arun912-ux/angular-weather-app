@@ -231,7 +231,7 @@ helm_kube_uninstall:
     echo "helm uninstall $APP_NAME-$CI_COMMIT_REF_NAME --namespace $APP_NAME" 
     helm uninstall "${APP_NAME}-${CI_COMMIT_REF_NAME}" --namespace $APP_NAME
   when: manual
-
+  allow_failure: true
 
 # helm_kube_deploy:
 #   stage: helm_kube_deploy
