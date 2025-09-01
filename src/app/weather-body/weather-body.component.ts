@@ -15,7 +15,7 @@ export class WeatherBodyComponent implements OnInit {
 
   icon : string = "09d";
   city : string = "New York";
-  response : any | undefined;
+  response : Weather | undefined;
   temp_type : string = "celsius";
   temp_symbol : string = "C";
 
